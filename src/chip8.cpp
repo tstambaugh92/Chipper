@@ -39,6 +39,9 @@ Chip8::Chip8() {
 };
 
 void Chip8::putFont(int index, bool* board, int pos) {
+	  //this will be modified for sprites later
+		//note that this only puts 4 bits, since all fonts
+	  //are 4 bits wide. Normal sprites will need 8
 		for(int j = 0; j < 5; j++) {
 			for(int k = 0; k < 4; k++) {
 				board[pos + j*64 + k] = (bool) (memory[index*5 + j] & (0x80 >> k));

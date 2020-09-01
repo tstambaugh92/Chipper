@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include "chip8.h"
 
-void printBoard(bool *board);
+void printBoard(bool *board); // prints an ASCII board to console for debugging
 
 int main(int argc, char **args) {
   //Chip8 has a 64x32 pixel board. Scale pixel size by WIN_SCALE
