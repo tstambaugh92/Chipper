@@ -1,6 +1,8 @@
 #include "chip8.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
+extern bool DEBUG_MODE;
 
 Chip8::Chip8(bool *screen) {
   //clear everything to 0
@@ -16,7 +18,16 @@ Chip8::Chip8(bool *screen) {
   sp = 0;
   pc = 0;
   opcode = 0;
+  opCount = 0;
   board = screen;
+  if(DEBUG_MODE) {
+    std::cout << "Creating log file\n";
+    log.open("log.txt",std::ios::trunc);
+    if(!log.good()) {
+      std::cout << "Error opening log file. Debug disabled\n";
+      DEBUG_MODE = false;
+    }
+  }
 
   //font data
   int font[] = {
@@ -41,8 +52,20 @@ Chip8::Chip8(bool *screen) {
     memory[i] = (uint8_t)font[i];
 };
 
+Chip8::~Chip8() {
+  if(log.good())
+    log << "\n";
+    log.close();
+};
+
 int Chip8::loadROM(char* filename) {
   std::ifstream gameROM;
+  if(DEBUG_MODE) {
+    std::string _filename(filename);
+    _filename = "Opening ROM " + _filename + "\n";
+    debug(_filename);
+  }
+
   //ROM opens at end of file to get filesize. Returns to start of file
   gameROM.open(filename, std::ios::in | std::ios::binary | std::ios::ate);
   if(!gameROM.good())
@@ -53,10 +76,14 @@ int Chip8::loadROM(char* filename) {
   gameROM.close();
   pc = 0x200;
   std::cout << "ROM opened\n";
+
+  if(DEBUG_MODE)
+    debug("ROM opened and loaded sucsessfully.\n");
   return 0;
 };
 
 void Chip8::executeOp(uint16_t testOp) {
+  opCount++;
   if(testOp == 0) {
     opcode = memory[pc];
     opcode <<=8;
@@ -64,6 +91,19 @@ void Chip8::executeOp(uint16_t testOp) {
   } else {
     opcode = testOp;
   }
+
+  if(DEBUG_MODE) {
+    std::stringstream ss;
+    ss << std::dec << opCount;
+    debug(ss.str() + ": ");
+    ss.str("");
+    ss << "0x" << std::hex << pc;
+    debug("pc - " + ss.str() + ", ");
+    ss.str("");
+    ss << "0x" << std::hex << opcode;
+    debug("opcode - " + ss.str() + " ");
+  }
+
   int temp, temp2;
   switch(opcode & 0xF000) {
     case 0x0000:
@@ -160,7 +200,10 @@ void Chip8::executeOp(uint16_t testOp) {
       pc+=2;
       break;
   }
-  std::cout << "Executed OP\n";
+
+  if(DEBUG_MODE) {
+    debug("--\n");
+  }
   return;
 };
 
@@ -173,4 +216,9 @@ void Chip8::putFont(int index, bool* board, int pos) {
         board[pos + j*64 + k] = (bool) (memory[index*5 + j] & (0x80 >> k));
       }
     }
+};
+
+void Chip8::debug(std::string dbString) {
+  log << dbString;
+  return;
 };

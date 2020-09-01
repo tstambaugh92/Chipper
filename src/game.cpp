@@ -2,7 +2,10 @@
 #include <iostream>
 #include <cstdint>
 #include <SDL2/SDL.h>
+#include <cstring>
 #include "chip8.h"
+
+bool DEBUG_MODE = false;
 
 void printBoard(bool *board); // prints an ASCII board to console for debugging
 
@@ -10,6 +13,14 @@ int main(int argc, char **args) {
   if(argc == 1) {
     std::cout << "Enter ROM title when executing\n";
     return -1;
+  }
+
+  //debug mode
+  if(argc >2) {
+    if(strcmp(args[2],"debug") == 0) {
+      DEBUG_MODE = true;
+      std::cout << "Debug mode on\n";
+    }
   }
 
   //Chip8 has a 64x32 pixel board. Scale pixel size by WIN_SCALE
