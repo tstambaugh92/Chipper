@@ -1,7 +1,8 @@
 #include "chip8.h"
 #include <iostream>
+#include <fstream>
 
-Chip8::Chip8() {
+Chip8::Chip8(bool *screen) {
   //clear everything to 0
   for(int i = 0; i < 4096; i++)
     memory[i] = 0;
@@ -14,6 +15,8 @@ Chip8::Chip8() {
   sound = 0;
   sp = 0;
   pc = 0;
+  opcode = 0;
+  board = screen;
 
   //font data
   int font[] = {
@@ -36,6 +39,19 @@ Chip8::Chip8() {
     };
   for(int i = 0; i < 80; i++)
     memory[i] = (int8_t)font[i];
+};
+
+int Chip8::loadROM(char* filename) {
+  std::ifstream gameROM;
+  //ROM opens at end of file to get filesize. Returns to start of file
+  gameROM.open(filename, std::ios::in | std::ios::binary | std::ios::ate);
+  if(!gameROM.good())
+    return -1;
+  int fileSize = gameROM.tellg();
+  gameROM.seekg(0);
+  gameROM.read((char *)&memory[200],fileSize);
+  gameROM.close();
+  return 0;
 };
 
 void Chip8::putFont(int index, bool* board, int pos) {

@@ -1,44 +1,35 @@
 #define SDL_MAIN_HANDLED
 #include <iostream>
 #include <cstdint>
-#include <fstream>
 #include <SDL2/SDL.h>
 #include "chip8.h"
 
 void printBoard(bool *board); // prints an ASCII board to console for debugging
 
 int main(int argc, char **args) {
+  if(argc == 1) {
+    std::cout << "Enter ROM title when executing\n";
+    return -1;
+  }
+
   //Chip8 has a 64x32 pixel board. Scale pixel size by WIN_SCALE
   int WIN_SCALE = 8;
   bool screen[PIX_COUNT]; //1 pixel is 1 bit
   for(int i = 0; i < PIX_COUNT; i++)
     screen[i] = false;
 
-  std::ifstream gameROM;
-  if(argc > 0) {
-    gameROM.open(args[1]);
-    if(gameROM.good()) {
-      std::cout << "opened rom\n";
-    } else {
-      std::cout << "failed to open rom\n";
-    }
-  } else {
-    std::cout << "Error opening ROM file.\n";
-    return -1;
-  }
-
   if(SDL_Init(SDL_INIT_VIDEO)) {
     printf("Error Initiliing SDL\n");
     return -1;
   }
 
-  Chip8 test;
-  //font test
-  for(int i=0; i<8; i++) {
-    test.putFont(i,screen,i*5);
-    test.putFont(i+8,screen,i*5 + 64*6);
+  Chip8 cpu(screen);
+  if(cpu.loadROM(args[1])) {
+    std::cout << "Error opening ROM\n";
+    return -1;
   }
 
+  //set up game window and pixel
   SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
   SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   SDL_SetRenderDrawColor(gameRenderer,0,0,0,255);

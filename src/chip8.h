@@ -7,7 +7,8 @@
 
 class Chip8 {
   public:
-    Chip8();
+    Chip8(bool* screen);
+    int loadROM(char* filename);
     void putFont(int index, bool* board, int pos);
   private:
     int8_t memory[4096]; //4kb of memory
@@ -18,6 +19,8 @@ class Chip8 {
     int8_t sp; //stack pointer
     int16_t pc; //program counter
     int16_t stack[16]; //stack
+    int16_t opcode;
+    bool* board;
 };
 
 #endif
