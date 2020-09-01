@@ -57,7 +57,6 @@ int Chip8::loadROM(char* filename) {
 };
 
 void Chip8::executeOp(uint16_t testOp) {
-  std::cout << "Executing OP\n";
   if(testOp == 0) {
     opcode = memory[pc];
     opcode <<=8;
@@ -65,7 +64,6 @@ void Chip8::executeOp(uint16_t testOp) {
   } else {
     opcode = testOp;
   }
-  std::cout << "Opcode " << std::hex << opcode << std::dec << std::endl;
   int temp, temp2;
   switch(opcode & 0xF000) {
     case 0x0000:
@@ -115,13 +113,10 @@ void Chip8::executeOp(uint16_t testOp) {
       break;
     case 0x6000:
       //6XNN - set VX to NN
-      std::cout << "Executing 6XNN\n";
       temp = opcode & 0x0F00;
       temp >>= 8;
-      std::cout << "Temp " << std::hex << temp << std::dec << std::endl;
       V[temp] = opcode & 0x00FF;
       pc+=2;
-      std::cout << "V" << std::hex << temp << " " << (int)V[temp] << std::dec << std::endl;
       break;
     case 0x7000:
       //7XNN - add NN to VX
