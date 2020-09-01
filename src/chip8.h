@@ -10,16 +10,17 @@ class Chip8 {
     Chip8(bool* screen);
     int loadROM(char* filename);
     void putFont(int index, bool* board, int pos);
+    void executeOp(uint16_t testOp);
   private:
-    int8_t memory[4096]; //4kb of memory
-    int8_t V[16]; //16 8 bit registers
-    int16_t mem_reg; //known as "I" in Chip8 terms. Renamed since i is common for loops
-    int8_t delay; // delay timer
-    int8_t sound; //sound timer
-    int8_t sp; //stack pointer
-    int16_t pc; //program counter
-    int16_t stack[16]; //stack
-    int16_t opcode;
+    uint8_t memory[4096]; //4kb of memory
+    uint8_t V[16]; //16 8 bit registers
+    uint16_t mem_reg; //known as "I" in Chip8 terms. Renamed since i is common for loops
+    uint8_t delay; // delay timer
+    uint8_t sound; //sound timer
+    uint8_t sp; //stack pointer
+    uint16_t pc; //program counter
+    uint16_t stack[16]; //stack
+    uint16_t opcode;
     bool* board;
 };
 

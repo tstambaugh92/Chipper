@@ -38,7 +38,7 @@ Chip8::Chip8(bool *screen) {
     0xf0,0x80,0xf0,0x80,0x80 //F
     };
   for(int i = 0; i < 80; i++)
-    memory[i] = (int8_t)font[i];
+    memory[i] = (uint8_t)font[i];
 };
 
 int Chip8::loadROM(char* filename) {
@@ -49,9 +49,124 @@ int Chip8::loadROM(char* filename) {
     return -1;
   int fileSize = gameROM.tellg();
   gameROM.seekg(0);
-  gameROM.read((char *)&memory[200],fileSize);
+  gameROM.read((char *)&(memory[0x200]),fileSize);
   gameROM.close();
+  pc = 0x200;
+  std::cout << "ROM opened\n";
   return 0;
+};
+
+void Chip8::executeOp(uint16_t testOp) {
+  std::cout << "Executing OP\n";
+  if(testOp == 0) {
+    opcode = memory[pc];
+    opcode <<=8;
+    opcode += memory[pc+1];
+  } else {
+    opcode = testOp;
+  }
+  std::cout << "Opcode " << std::hex << opcode << std::dec << std::endl;
+  int temp, temp2;
+  switch(opcode & 0xF000) {
+    case 0x0000:
+      if(opcode == 0x00E0) {
+        //0x00E0 - clear screen
+        for(int i = 0; i < PIX_COUNT; i++)
+          board[i] = false;
+        pc+=2;
+      } else if(opcode == 0x00EE) {
+        //0x00EE - return from sub
+        pc = stack[sp];
+        sp--;
+        pc+=2;
+      } else {
+        //machine code possible here. NOP for now
+      }
+      break;
+    case 0x1000:
+      //1NNN - jump to NNN
+      pc = opcode & 0x0FFF;
+      break;
+    case 0x2000:
+      //2NNN - call sub
+      sp++;
+      stack[sp] = pc;
+      pc = opcode & 0x0FFF;
+      break;
+    case 0x3000:
+      //3XNN - skip next if VX == NN
+      temp = opcode & 0x0F00;
+      temp >>= 8;
+      pc = V[temp] == (opcode & 0x00FF) ? pc+4 : pc+2;
+      break;
+    case 0x4000:
+      //4XNN - skip next if VX != NN
+      temp = opcode & 0x0F00;
+      temp >>= 8;
+      pc = V[temp] != (opcode & 0x00FF) ? pc+4 : pc+2;
+      break;
+    case 0x5000:
+      //5XY0 - skip next if VX == VY
+      temp = opcode & 0x0F00;
+      temp2 = opcode & 0x00F0;
+      temp >>= 8;
+      temp2 >= 8;
+      pc = V[temp] == V[temp2] ? pc+4 : pc+2;
+      break;
+    case 0x6000:
+      //6XNN - set VX to NN
+      std::cout << "Executing 6XNN\n";
+      temp = opcode & 0x0F00;
+      temp >>= 8;
+      std::cout << "Temp " << std::hex << temp << std::dec << std::endl;
+      V[temp] = opcode & 0x00FF;
+      pc+=2;
+      std::cout << "V" << std::hex << temp << " " << (int)V[temp] << std::dec << std::endl;
+      break;
+    case 0x7000:
+      //7XNN - add NN to VX
+      temp = opcode & 0x0F00;
+      V[temp] = (int8_t)(V[temp] + opcode & 0x00FF);
+      pc+=2;
+      break;
+    case 0x8000:
+      temp = opcode & 0x0F00;
+      temp2 = opcode & 0x00F0;
+      temp>>=8;
+      temp2>>=8;
+      switch (opcode & 0x000F) {
+        case 0:
+          //8XY0 - Set VX = VY
+          V[temp] = V[temp2];
+          break;
+        case 1:
+          //8XY1 - Set VX = VX OR VY
+          V[temp] = V[temp] | V[temp2];
+          break;
+        case 2:
+          //8XY2 - Set VX = VX AND VY
+          V[temp] = V[temp] & V[temp2];
+          break;
+        case 3:
+          //8XY3 - Set VX = VX XOR VY
+          V[temp] = V[temp] ^ V[temp2];
+          break;
+        case 4:
+          //8XY4 - Set VX = VX + XY, set VF as cary
+          V[15] = V[temp] + V[temp2] > 0xFF ? 1 : 0;
+          V[temp]+=V[temp2];
+          break;
+        case 5:
+          //8XY5 - Set VX = VX - VY, set VF to 0 if borrow
+          V[15] = V[temp] > V[temp2] ? 1: 0;
+          V[temp] = (uint8_t)(V[temp] - V[temp2]);
+          break;
+      }
+      pc+=2;
+      break;
+  }
+  std::cout << "Executed OP\n";
+  return;
 };
 
 void Chip8::putFont(int index, bool* board, int pos) {
