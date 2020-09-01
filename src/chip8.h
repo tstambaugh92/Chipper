@@ -7,14 +7,20 @@
 #define PIX_HEIGHT 32
 #define PIX_COUNT 64*32
 
+enum returnCodes {
+  chip_normal,
+  chip_exit
+};
+
 class Chip8 {
   public:
     ~Chip8();
     Chip8(bool* screen);
     int loadROM(char* filename);
     void putFont(int index, bool* board, int pos);
-    void executeOp(uint16_t testOp);
+    int executeOp(uint16_t testOp);
     void debug(std::string);
+    void dumpCpu();
   private:
     uint8_t memory[4096]; //4kb of memory
     uint8_t V[16]; //16 8 bit registers

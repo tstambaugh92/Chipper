@@ -74,7 +74,7 @@ int Chip8::loadROM(char* filename) {
   gameROM.seekg(0);
   gameROM.read((char *)&(memory[0x200]),fileSize);
   gameROM.close();
-  pc = 0x200;
+  pc = 0x200; //default starting area for Chip8 games
   std::cout << "ROM opened\n";
 
   if(DEBUG_MODE)
@@ -82,7 +82,7 @@ int Chip8::loadROM(char* filename) {
   return 0;
 };
 
-void Chip8::executeOp(uint16_t testOp) {
+int Chip8::executeOp(uint16_t testOp) {
   opCount++;
   if(testOp == 0) {
     opcode = memory[pc];
@@ -119,6 +119,13 @@ void Chip8::executeOp(uint16_t testOp) {
         pc+=2;
       } else {
         //machine code possible here. NOP for now
+        if (opcode == 0x0000) {
+          std::cout << "ending game\n";
+          if(DEBUG_MODE) {
+            debug("+\nEnding game\n");
+          }
+          return chip_exit;
+        }
       }
       break;
     case 0x1000:
@@ -168,7 +175,7 @@ void Chip8::executeOp(uint16_t testOp) {
       temp = opcode & 0x0F00;
       temp2 = opcode & 0x00F0;
       temp>>=8;
-      temp2>>=8;
+      temp2>>=4;
       switch (opcode & 0x000F) {
         case 0:
           //8XY0 - Set VX = VY
@@ -204,7 +211,7 @@ void Chip8::executeOp(uint16_t testOp) {
   if(DEBUG_MODE) {
     debug("--\n");
   }
-  return;
+  return chip_normal;
 };
 
 void Chip8::putFont(int index, bool* board, int pos) {
@@ -220,5 +227,16 @@ void Chip8::putFont(int index, bool* board, int pos) {
 
 void Chip8::debug(std::string dbString) {
   log << dbString;
+  return;
+};
+
+void Chip8::dumpCpu() {
+  std::stringstream ss;
+  debug("\n\nFinal CPU dump:\n");
+  for(int i = 0; i < 16; i ++) {
+    ss.str("");
+    ss << "V" << std::hex << i  << std::dec << ": 0x" << std::hex << (int)V[i] << std::dec<< std::endl;
+    debug(ss.str());
+  }
   return;
 };

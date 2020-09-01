@@ -40,8 +40,6 @@ int main(int argc, char **args) {
     return -1;
   }
 
-  cpu.executeOp(0);
-
   //set up game window and pixel
   SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
   SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -63,7 +61,8 @@ int main(int argc, char **args) {
       if(event.type == SDL_QUIT)
         quit = true;
     }
-
+    if(cpu.executeOp(0) == chip_exit)
+      quit = true;
     SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
     for(t = 0; t < PIX_COUNT; t++) {
       if (screen[t]) {
@@ -76,6 +75,8 @@ int main(int argc, char **args) {
     SDL_RenderPresent(gameRenderer);
     SDL_Delay(500);
   }
+  if(DEBUG_MODE)
+    cpu.dumpCpu();
   free(pixel);
   SDL_DestroyRenderer(gameRenderer);
   SDL_DestroyWindow(window);
