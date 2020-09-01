@@ -4,8 +4,8 @@ CXXFLAGS=-lmingw32 -lSDL2main -lSDL2
 LIB=-LC:/SDL2-2.0.5/x86_64-w64-mingw32/lib
 INC=-IC:/SDL2-2.0.5/x86_64-w64-mingw32/include
 
-testmake: game.cpp
-	$(CXX) -o ./bin/test.exe *.cpp $(INC) $(LIB) $(CXXFLAGS)
+testmake: ./src/game.cpp
+	$(CXX) -o ./bin/test.exe ./src/*.cpp $(INC) $(LIB) $(CXXFLAGS)
 
 clean:
 	rm ./bin/*.o ./bin/*.exe
