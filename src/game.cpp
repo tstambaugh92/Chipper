@@ -1,14 +1,29 @@
 #define SDL_MAIN_HANDLED
 #include <iostream>
+#include <fstream>
 #include <SDL2/SDL.h>
 #include "chip8.h"
 
-int main() {
+int main(int argc, char **args) {
     //Chip8 has a 64x32 pixel board. Scale pixel size by WIN_SCALE
     int WIN_SCALE = 8;
     bool screen[64*32];
     for(int i = 0; i<64*32; i++)
         screen[i] = 0;
+
+    std::ifstream gameROM;
+    if(argc > 0) {
+        gameROM.open(args[1]);
+        if(gameROM.good()) {
+            std::cout << "opened rom\n";
+        } else {
+            std::cout << "failed to open rom\n";
+        }
+    } else {
+        std::cout << "Error opening ROM file.\n";
+        return -1;
+    }
+
 
     if(SDL_Init(SDL_INIT_VIDEO)) {
         printf("Error Initiliing SDL\n");
