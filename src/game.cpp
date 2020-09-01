@@ -4,7 +4,7 @@
 
 int main() {
 
-	if(SDL_Init(SDL_INIT_VIDEO)) {
+    if(SDL_Init(SDL_INIT_VIDEO)) {
         printf("Error Initiliing SDL\n");
         return -1;
     }
@@ -13,5 +13,5 @@ int main() {
     window = SDL_CreateWindow( "Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*4, 32*4, SDL_WINDOW_SHOWN );
     int x;
     std::cin >> x;
-	return 0;
+    return 0;
 }
