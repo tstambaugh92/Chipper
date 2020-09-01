@@ -1,0 +1,12 @@
+Chip8: Yet another Newbie Developed Interpreter
+Thomas Stambaugh
+
+An attempt at a Chip8 Interpreter using SDL2 in C++.
+C++ is used instead of C because at some point I'm going to use the
+windows API for file selection.
+
+Makefile included is for Windows using MinGW 64 bit tools. Code
+itself should compile fine using 32bit MinGW and SDL. At the moment,
+code should run in Linux as well. No WinAPI code right now. Will
+figure out how to do different make files for different OS's at a 
+later time. Don't have much experience with Make.
