@@ -18,6 +18,7 @@ class Chip8 {
     Chip8();
     int loadROM(char* filename);
     int executeOp();
+    void timerTick();
     bool getPixel(int);
     void setKeys(bool *);
     void debug(std::string);

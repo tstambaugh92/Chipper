@@ -44,8 +44,8 @@ int main(int argc, char **args) {
   }
 
   //set up game window and pixel
-  SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
-  SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8 | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
+  SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
   SDL_SetRenderDrawColor(gameRenderer,0,0,0,255);
   SDL_Event event;
   bool quit = false;
@@ -54,7 +54,7 @@ int main(int argc, char **args) {
   pixel->y = 0;
   pixel->w = WIN_SCALE;
   pixel->h = WIN_SCALE;
-
+  int opsPerSec = 800;
 
   //main loop
   while(!quit) {
@@ -90,6 +90,18 @@ int main(int argc, char **args) {
           keys[14] = keyState[SDL_SCANCODE_F];
           keys[15] = keyState[SDL_SCANCODE_V];
           cpu.setKeys(keys);
+          if(keyState[SDL_SCANCODE_RIGHT]) {
+            opsPerSec+=100;
+            char title[256];
+            sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
+            SDL_SetWindowTitle(window,title);
+          }
+          if(keyState[SDL_SCANCODE_LEFT]) {
+            opsPerSec-=100;
+            char title[256];
+            sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
+            SDL_SetWindowTitle(window,title);
+          }
           break;
         }
         default:
@@ -109,6 +121,7 @@ int main(int argc, char **args) {
       default:
         break;
     }
+    cpu.timerTick();
 
     //draw active pixels
     SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
@@ -122,7 +135,7 @@ int main(int argc, char **args) {
 
     //display screen, wait
     SDL_RenderPresent(gameRenderer);
-    SDL_Delay(100);
+    SDL_Delay(1.0/opsPerSec * 1000);
   }
 
   //dump CPU and cleanup

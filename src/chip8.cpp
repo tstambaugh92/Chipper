@@ -157,7 +157,7 @@ int Chip8::executeOp() {
       break;
     case 0x2000:
       //2NNN - call sub
-      pc++;
+      pc+=2;
       stack[sp] = pc;
       sp++;
       pc = opcode & 0x0FFF;
@@ -397,6 +397,14 @@ int Chip8::executeOp() {
   }
   return chip_normal;
 };
+
+void Chip8::timerTick() {
+  if(delay > 0)
+    delay--;
+  if(sound > 0)
+    sound--;
+  return;
+}
 
 bool Chip8::getPixel(int pix) {
   return board[pix];
