@@ -9,7 +9,7 @@
 
 bool DEBUG_MODE = false;
 
-void printBoard(bool *board); // prints an ASCII board to console for debugging
+void printBoard(int *board); // prints an ASCII board to console for debugging
 
 int main(int argc, char **args) {
   std::srand(std::time(NULL));
@@ -28,9 +28,9 @@ int main(int argc, char **args) {
 
   //Chip8 has a 64x32 pixel board. Scale pixel size by WIN_SCALE
   int WIN_SCALE = 8;
-  bool screen[PIX_COUNT]; //1 pixel is 1 bit
+  int screen[PIX_COUNT]; //1 pixel is 1 bit
   for(int i = 0; i < PIX_COUNT; i++)
-    screen[i] = false;
+    screen[i] = 0;
 
   if(SDL_Init(SDL_INIT_VIDEO)) {
     printf("Error Initiliing SDL\n");
@@ -141,9 +141,23 @@ int main(int argc, char **args) {
     }
 
     //draw active pixels
+    int cur_pix;
     SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
     for(int i = 0; i < PIX_COUNT; i++) {
-      if (cpu.getPixel(i)) {
+      cur_pix = cpu.getPixel(i);
+      if(cur_pix) {
+        switch(cur_pix) {
+          case 3:
+            SDL_SetRenderDrawColor(gameRenderer,0,0,255,255);
+            break;
+          case 2:
+            SDL_SetRenderDrawColor(gameRenderer,255,0,0,255);
+            break;
+          default:
+          case 1:
+            SDL_SetRenderDrawColor(gameRenderer,0,255,0,255);
+            break;
+        }
         pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
         pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
         SDL_RenderFillRect(gameRenderer,pixel);

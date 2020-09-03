@@ -19,7 +19,7 @@ class Chip8 {
     int loadROM(char* filename);
     int executeOp();
     void timerTick();
-    bool getPixel(int);
+    int getPixel(int);
     void setKeys(bool *);
     void debug(std::string);
     void dumpCpu();
@@ -34,7 +34,7 @@ class Chip8 {
     uint16_t stack[16]; //stack
     uint16_t opcode;
     bool keys[16];
-    bool board[PIX_COUNT];
+    int board[PIX_COUNT];
     int opCount;
     std::ofstream log;
 };

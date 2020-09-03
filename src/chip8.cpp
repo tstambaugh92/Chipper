@@ -22,7 +22,7 @@ Chip8::Chip8() {
   opcode = 0;
   opCount = 0;
   for(int i = 0; i < PIX_COUNT; i++) {
-    board[i] = false;
+    board[i] = 0;
   }
   if(DEBUG_MODE) {
     std::cout << "Creating log file\n";
@@ -252,8 +252,19 @@ int Chip8::executeOp() {
       V[x_code] = (std::rand() % 256) & (opcode & 0x00FF);
       pc += 2;
       break;
-    case 0xd000:
+    case 0xd000: {
       //DXYN - Draw N byte sprite in I at (VX,VY). If any pixels turned off, set VF = 1
+      int draw_color = 1;
+      switch(mem_reg) {
+        case 0x3c1:
+          draw_color = 2;
+          break;
+        case 0x3c7:
+          draw_color = 3;
+          break;
+        default:
+          break;
+      }
       if(mem_reg + (opcode & 0x000F) >= 4096) {
         std::cout << "Attempt to access out of bounds memory.";
         if(DEBUG_MODE)
@@ -261,24 +272,27 @@ int Chip8::executeOp() {
         return chip_oob;
       } 
       V[15] = 0;
+      std::cout << "Sprite at I 0x" << std::hex << mem_reg << " " << opcode << std::dec << "\n";
       for(int i = 0; i < (opcode & 0x000F); i++) {
         for(int j = 0; j < 8; j++) {
           int cur_pixel = ((V[y_code] + i) % PIX_HEIGHT) * PIX_WIDTH + (V[x_code] + j) % PIX_WIDTH;
-          if ((board[cur_pixel] == true) && ((memory[mem_reg+i] & (0x80 >> j)) != 0))
+          if ((board[cur_pixel] != 0) && ((memory[mem_reg+i] & (0x80 >> j)) != 0))
             V[15] = 1;
           //this is a rather long way of writing a logical XOR
           //seems like it should be doable in 1 line, but C++ aint havin it rn
           if(board[cur_pixel]) {
             if(memory[mem_reg+i] & (0x80 >> j))
-              board[cur_pixel] = false;
+              board[cur_pixel] = 0;
           } else {
-            if(memory[mem_reg+i] & (0x80 >> j))
-              board[cur_pixel] = true;
+            if(memory[mem_reg+i] & (0x80 >> j)) {
+              board[cur_pixel] = draw_color;
+            }
           }
         }
       }
       pc += 2;
       break;
+    }
     case 0xE000:
       switch(opcode & 0x00FF) {
         case 0x9E:
@@ -406,7 +420,7 @@ void Chip8::timerTick() {
   return;
 }
 
-bool Chip8::getPixel(int pix) {
+int Chip8::getPixel(int pix) {
   return board[pix];
 };
 
