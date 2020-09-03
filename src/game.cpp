@@ -55,7 +55,9 @@ int main(int argc, char **args) {
   pixel->w = WIN_SCALE;
   pixel->h = WIN_SCALE;
   int opsPerSec = 800;
-
+  int prevTicks = 0;
+  int newTicks = 0;
+  double sixtyHertz = 1.0 / 60.0 * 1000; //miliseonds
   //main loop
   while(!quit) {
     //clear screen
@@ -121,7 +123,11 @@ int main(int argc, char **args) {
       default:
         break;
     }
-    cpu.timerTick();
+    newTicks = SDL_GetTicks();
+    if( newTicks - prevTicks > sixtyHertz) {
+      cpu.timerTick();
+      prevTicks = newTicks;
+    }
 
     //draw active pixels
     SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
