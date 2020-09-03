@@ -1,7 +1,8 @@
 #include "chip8.h"
 #include <iostream>
-#include <fstream>
 #include <sstream>
+#include <cstdlib>
+#include <string>
 extern bool DEBUG_MODE;
 
 Chip8::Chip8(bool *screen) {
@@ -214,6 +215,45 @@ int Chip8::executeOp(uint16_t testOp) {
       }
       pc+=2;
       break;
+    case 0x9000:
+      //9XY0 - Skip next instruction if VX != VY
+      pc += V[x_code] != V[y_code] ? 4 : 2;
+      break;
+    case 0xa000:
+      //ANNN - Set I = NNN
+      mem_reg = opcode & 0x0FFF;
+      pc += 2;
+      break;
+    case 0xb000:
+      //BNNN - Jump to V0 + NNN
+      pc = V[0] + (opcode & 0x0FFF);
+      break;
+    case 0xc000:
+      //CXNN - Set VX = random number 0 to 255 masked with NN
+      V[x_code] = (std::rand() % 256) & (opcode & 0x00FF);
+      pc += 2;
+      break;
+    case 0xd000:
+      //DXYN - Draw N byte sprite in I at (VX,VY). If any pixels turned off, set VF = 1
+      V[15] = 0;
+      for(int i = 0; i < (opcode & 0x000F); i++) {
+        for(int j = 0; j < 8; j++) {
+          int cur_pixel = ((V[y_code] + i) % PIX_HEIGHT) * PIX_WIDTH + (V[x_code] + j) % PIX_WIDTH;
+          if ((board[cur_pixel] == true) && ((memory[mem_reg+i] & (0x80 >> j)) != 0))
+            V[15] = 1;
+          //this is a rather long way of writing a logical XOR
+          //seems like it should be doable in 1 line, but C++ aint havin it rn
+          if(board[cur_pixel]) {
+            if(memory[mem_reg+i] & (0x80 >> j))
+              board[cur_pixel] = false;
+          } else {
+            if(memory[mem_reg+i] & (0x80 >> j))
+              board[cur_pixel] = true;
+          }
+        }
+      }
+      pc += 2;
+      break;
   }
 
   if(DEBUG_MODE) {
@@ -244,6 +284,30 @@ void Chip8::dumpCpu() {
   for(int i = 0; i < 16; i ++) {
     ss.str("");
     ss << "V" << std::hex << i  << std::dec << ": 0x" << std::hex << (int)V[i] << std::dec<< std::endl;
+    debug(ss.str());
+  }
+  ss.str("");
+  ss << "PC: 0x" << std::hex << (int)pc << std::dec << "\n";
+  debug(ss.str());
+  ss.str("");
+  ss << "I: 0x" << std::hex << (int)mem_reg << std::dec << "\n";
+  debug(ss.str());
+  ss.str("");
+  ss << "SP: 0x" << std::hex << (int)sp << std::dec << "\n";
+  debug(ss.str());
+  ss.str("");
+  ss << "Delay Timer: 0x" << std::hex << (int)delay << std::dec << "\n";
+  debug(ss.str());
+  ss.str("");
+  ss << "Sound Timer: 0x" << std::hex << (int)sound << std::dec << "\n";
+  debug(ss.str());
+  debug("\n\nFinal RAM dump\n");
+  for(int i = 0; i < 4096; i+=8) {
+    ss.str("");
+    ss << "0x" << std::hex << i << " ";
+    for(int j = 0; j < 8; j++)
+      ss << (int)memory[i+j] << " ";
+    ss << "\n";
     debug(ss.str());
   }
   return;

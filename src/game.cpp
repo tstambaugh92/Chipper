@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <SDL2/SDL.h>
 #include <cstring>
+#include <cstdlib>
+#include <ctime>
 #include "chip8.h"
 
 bool DEBUG_MODE = false;
@@ -10,6 +12,7 @@ bool DEBUG_MODE = false;
 void printBoard(bool *board); // prints an ASCII board to console for debugging
 
 int main(int argc, char **args) {
+  std::srand(std::time(NULL));
   if(argc == 1) {
     std::cout << "Enter ROM title when executing\n";
     return -1;
@@ -73,7 +76,7 @@ int main(int argc, char **args) {
     }
 
     SDL_RenderPresent(gameRenderer);
-    SDL_Delay(500);
+    SDL_Delay(200);
   }
   if(DEBUG_MODE)
     cpu.dumpCpu();

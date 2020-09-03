@@ -2,7 +2,6 @@
 #define _CHIP_8_
 #include <cstdint>
 #include <fstream>
-#include <string>
 #define PIX_WIDTH 64
 #define PIX_HEIGHT 32
 #define PIX_COUNT 64*32
