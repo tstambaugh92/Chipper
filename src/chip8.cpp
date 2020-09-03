@@ -216,8 +216,8 @@ int Chip8::executeOp() {
           //8XY6 - Set VX = VY >> 1, store LSB of VY in VF
           //this op code seems to be contested
           //this was an undoc'd opcode in the original spec.
-          V[x_code] = V[y_code] >> 1;
-          V[15] = V[y_code] & 0x0001 == 1 ? 1 : 0;
+          V[15] = V[x_code] & 0x01 == 1 ? 1 : 0;
+          V[x_code] = (V[x_code] >> 1);
           break;
         case 7:
           //8XY7 - Set VX = VY - VX
@@ -228,8 +228,8 @@ int Chip8::executeOp() {
           //8XYE - Set VX = VY << 1, store MSB of VY in VF
           //this is also a contested op code.
           //this was an undoc'd opcode in the original spec
-          V[15] = V[y_code] & 0x8000 == 0x8000 ? 1 : 0;
-          V[x_code] = V[y_code] << 1;
+          V[15] = V[x_code] & 0x80 == 0x8000 ? 1 : 0;
+          V[x_code] = (V[x_code] << 1);
           break;
       }
       pc+=2;
