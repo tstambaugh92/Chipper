@@ -8,7 +8,8 @@
 
 enum returnCodes {
   chip_normal,
-  chip_exit
+  chip_exit,
+  chip_oob
 };
 
 class Chip8 {
@@ -16,7 +17,7 @@ class Chip8 {
     ~Chip8();
     Chip8();
     int loadROM(char* filename);
-    int executeOp(uint16_t testOp);
+    int executeOp();
     bool getPixel(int);
     void setKeys(bool *);
     void debug(std::string);

@@ -89,6 +89,7 @@ int main(int argc, char **args) {
           keys[13] = keyState[SDL_SCANCODE_R];
           keys[14] = keyState[SDL_SCANCODE_F];
           keys[15] = keyState[SDL_SCANCODE_V];
+          cpu.setKeys(keys);
           break;
         }
         default:
@@ -97,8 +98,17 @@ int main(int argc, char **args) {
     }
 
     //execute next instruction
-    if(cpu.executeOp(0) == chip_exit)
-      quit = true;
+    switch(cpu.executeOp()) {
+      case chip_oob:
+        if(DEBUG_MODE)
+          cpu.debug("Stopped execution due to bad address. Check I\n");
+      case chip_exit:
+        quit = true;
+        break;
+      case chip_normal:
+      default:
+        break;
+    }
 
     //draw active pixels
     SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
@@ -112,7 +122,7 @@ int main(int argc, char **args) {
 
     //display screen, wait
     SDL_RenderPresent(gameRenderer);
-    SDL_Delay(200);
+    SDL_Delay(100);
   }
 
   //dump CPU and cleanup

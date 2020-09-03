@@ -75,6 +75,13 @@ int Chip8::loadROM(char* filename) {
   if(!gameROM.good())
     return -1;
   int fileSize = gameROM.tellg();
+  if(fileSize > 0xE00) {
+    std::cout << "ROM too large.\n";
+    if(DEBUG_MODE)
+      debug("ROM too large.\n");
+    gameROM.close();
+    return -1;
+  }
   gameROM.seekg(0);
   gameROM.read((char *)&(memory[0x200]),fileSize);
   gameROM.close();
@@ -86,15 +93,18 @@ int Chip8::loadROM(char* filename) {
   return 0;
 };
 
-int Chip8::executeOp(uint16_t testOp) {
+int Chip8::executeOp() {
   opCount++;
-  if(testOp == 0) {
-    opcode = memory[pc];
-    opcode <<=8;
-    opcode += memory[pc+1];
-  } else {
-    opcode = testOp;
+  if(pc >= 4096) {
+    std::cout << "PC is out of bounds\n";
+    if(DEBUG_MODE)
+      debug("PC is OOB. See CPU dump.\n");
+    return chip_oob;
   }
+  opcode = memory[pc];
+  opcode <<=8;
+  opcode += memory[pc+1];
+
 
   if(DEBUG_MODE) {
     std::stringstream ss;
@@ -127,11 +137,17 @@ int Chip8::executeOp(uint16_t testOp) {
       } else {
         //machine code possible here. NOP for now
         if (opcode == 0x0000) {
+          //treating 0x0000 as end game
           std::cout << "ending game\n";
           if(DEBUG_MODE) {
-            debug("+\nEnding game\n");
+            debug("+\nEnding game normally\n");
           }
           return chip_exit;
+        } else {
+          std::cout << "Bad opcode. NOP\n";
+          if(DEBUG_MODE)
+            debug("BAD OPCODE");
+          pc+=2;
         }
       }
       break;
@@ -238,6 +254,12 @@ int Chip8::executeOp(uint16_t testOp) {
       break;
     case 0xd000:
       //DXYN - Draw N byte sprite in I at (VX,VY). If any pixels turned off, set VF = 1
+      if(mem_reg + (opcode & 0x000F) >= 4096) {
+        std::cout << "Attempt to access out of bounds memory.";
+        if(DEBUG_MODE)
+          debug("BAD MEMORY\n");
+        return chip_oob;
+      } 
       V[15] = 0;
       for(int i = 0; i < (opcode & 0x000F); i++) {
         for(int j = 0; j < 8; j++) {
@@ -258,16 +280,114 @@ int Chip8::executeOp(uint16_t testOp) {
       pc += 2;
       break;
     case 0xE000:
-      if((opcode & 0x00FF) == 0x9E) {
-        //EX9E - Skip next if key in Vx is pressed
-        pc += keys[(V[x_code] & 0x000F)] ? 4 : 2;
-      } else if((opcode & 0x00FF) == 0xA1) {
-        //EXA1 - Skip next if key in Vx is NOT pressed
-        pc += keys[(V[x_code] & 0x000F)] ? 2 : 4;
-      } else {
-        std::cout << "Bad opcode.\n";
-        if(DEBUG_MODE)
-          debug("BAD OPCODE");
+      switch(opcode & 0x00FF) {
+        case 0x9E:
+          //EX9E - Skip next if key in Vx is pressed
+          pc += keys[(V[x_code] & 0x000F)] ? 4 : 2;
+          break; 
+        case 0xA1:
+          //EXA1 - Skip next if key in Vx is NOT pressed
+          pc += keys[(V[x_code] & 0x000F)] ? 2 : 4;
+          break;
+        default:
+          //bad code. NOP
+          std::cout << "Bad opcode.\n";
+          if(DEBUG_MODE)
+            debug("BAD OPCODE");
+          pc+=2;
+          break;
+      }
+      break;
+    case 0xF000:
+      switch(opcode & 0x00FF) {
+        case 0x07:
+          //FX07 - Store delay timer in VX
+          V[x_code] = delay;
+          pc+=2;
+          break;
+        case 0x0A:
+          //FX0A - Wait for keypress and store in Vx
+          //this is more like a system interupt.
+          //will not progress past this opcode until keypress
+          for(int i = 0; i < 16; i++) {
+            if(keys[i]) {
+              V[x_code] = i;
+              pc+=2;
+              break;
+            }
+          }
+          break;
+        case 0x15:
+          //FX15 - Set delay timer = VX
+          delay = V[x_code];
+          pc+=2;
+          break;
+        case 0x18:
+          //FX18 - Set sound timer = VX
+          sound = V[x_code];
+          pc+=2;
+          break;
+        case 0x1E:
+          //FX1E - Set I = I + VX
+          mem_reg += V[x_code];
+          pc+=2;
+          break;
+        case 0x29:
+          //FX29 - Load font of number in VX into I
+          if(V[x_code] > 0xF) {
+            std::cout << "Attempt to load bad font\n";
+            if(DEBUG_MODE)
+              debug("BAD FONT");
+          }
+          mem_reg = V[x_code] * 5;
+          pc+=2;
+          break;
+        case 0x33:
+          //FX33 - Load BCD of VX into I, I+1, I+2
+          if(mem_reg+2 >= 4096) {
+            std::cout << "Attempt to access out of bounds memory.";
+            if(DEBUG_MODE)
+              debug("BAD MEMORY\n");
+            return chip_oob;
+          }
+          memory[mem_reg] = (V[x_code] / 100);
+          memory[mem_reg+1] = ((V[x_code] % 100) / 10);
+          memory[mem_reg+2] = ((V[x_code] % 100) % 10);
+          pc+=2;
+          break;
+        case 0x55:
+          //FX55 - Store V0 through VX at I to I+X
+          if(mem_reg+x_code >= 4096) {
+            std::cout << "Attempt to access out of bounds memory.";
+            if(DEBUG_MODE)
+              debug("BAD MEMORY\n");
+            return chip_oob;  
+          }
+          for(int i = 0; i <= x_code; i++) {
+            memory[mem_reg+i] = V[i];
+          }
+          pc+=2;
+          break;
+        case 0x65:
+          //FX65 Load V0 to VX from I to I+X
+          if(mem_reg+x_code >= 4096) {
+            std::cout << "Attempt to access out of bounds memory.";
+            if(DEBUG_MODE)
+              debug("BAD MEMORY\n");
+            return chip_oob;  
+          }
+          for(int i = 0; i <= x_code; i++) {
+            V[i] = memory[mem_reg+i];
+          }
+          pc+=2;
+          break;
+        default:
+          //Bad Opcode. NOP
+          std::cout << "Bad Opode\n";
+          if(DEBUG_MODE)
+            debug("BAD OPCODE");
+          pc+=2;
+          break;
       }
       break;
   }
