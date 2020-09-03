@@ -55,11 +55,18 @@ int main(int argc, char **args) {
   pixel->w = WIN_SCALE;
   pixel->h = WIN_SCALE;
   int opsPerSec = 800;
-  int prevTicks = 0;
-  int newTicks = 0;
-  double sixtyHertz = 1.0 / 60.0 * 1000; //miliseonds
+  double msecPerOp = 1000.0 / 800;
+  int delayTicks = 0;
+  int delayDeltaTicks = 0;
+  double sixtyHertz = 1000.0 / 60.0; //miliseonds
+  int startCycleTicks = 0;
+  int cycleDelta = 0;
+
   //main loop
   while(!quit) {
+    //timing of cycle
+    startCycleTicks = SDL_GetTicks();
+
     //clear screen
     SDL_SetRenderDrawColor(gameRenderer,0,0,0,255); //black
     SDL_RenderClear(gameRenderer);
@@ -94,12 +101,14 @@ int main(int argc, char **args) {
           cpu.setKeys(keys);
           if(keyState[SDL_SCANCODE_RIGHT]) {
             opsPerSec+=100;
+            msecPerOp = 1000.0 / opsPerSec;
             char title[256];
             sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
             SDL_SetWindowTitle(window,title);
           }
           if(keyState[SDL_SCANCODE_LEFT]) {
             opsPerSec-=100;
+            msecPerOp = 1000.0 / opsPerSec;
             char title[256];
             sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
             SDL_SetWindowTitle(window,title);
@@ -123,10 +132,12 @@ int main(int argc, char **args) {
       default:
         break;
     }
-    newTicks = SDL_GetTicks();
-    if( newTicks - prevTicks > sixtyHertz) {
+
+    //chip8 has 2 60Hz timers
+    delayDeltaTicks = SDL_GetTicks();
+    if( delayDeltaTicks - delayTicks > sixtyHertz) {
       cpu.timerTick();
-      prevTicks = newTicks;
+      delayTicks = delayDeltaTicks;
     }
 
     //draw active pixels
@@ -141,7 +152,9 @@ int main(int argc, char **args) {
 
     //display screen, wait
     SDL_RenderPresent(gameRenderer);
-    SDL_Delay(1.0/opsPerSec * 1000);
+    cycleDelta = SDL_GetTicks() - startCycleTicks;
+    if (cycleDelta < msecPerOp)
+      SDL_Delay(msecPerOp - cycleDelta);
   }
 
   //dump CPU and cleanup
