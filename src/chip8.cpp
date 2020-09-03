@@ -114,9 +114,8 @@ int Chip8::executeOp(uint16_t testOp) {
         pc+=2;
       } else if(opcode == 0x00EE) {
         //0x00EE - return from sub
-        pc = stack[sp];
         sp--;
-        pc+=2;
+        pc = stack[sp];
       } else {
         //machine code possible here. NOP for now
         if (opcode == 0x0000) {
@@ -134,8 +133,9 @@ int Chip8::executeOp(uint16_t testOp) {
       break;
     case 0x2000:
       //2NNN - call sub
-      sp++;
+      pc++;
       stack[sp] = pc;
+      sp++;
       pc = opcode & 0x0FFF;
       break;
     case 0x3000:
@@ -155,7 +155,7 @@ int Chip8::executeOp(uint16_t testOp) {
       temp = opcode & 0x0F00;
       temp2 = opcode & 0x00F0;
       temp >>= 8;
-      temp2 >= 8;
+      temp2 >>= 4;
       pc = V[temp] == V[temp2] ? pc+4 : pc+2;
       break;
     case 0x6000:
