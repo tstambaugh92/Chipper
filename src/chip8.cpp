@@ -5,13 +5,14 @@
 #include <string>
 extern bool DEBUG_MODE;
 
-Chip8::Chip8(bool *screen) {
+Chip8::Chip8() {
   //clear everything to 0
   for(int i = 0; i < 4096; i++)
     memory[i] = 0;
   for(int i = 0; i < 16; i++) {
     V[i] = 0;
     stack[i] = 0;
+    keys[i] = false;
   }
   mem_reg = 0;
   delay = 0;
@@ -20,7 +21,9 @@ Chip8::Chip8(bool *screen) {
   pc = 0;
   opcode = 0;
   opCount = 0;
-  board = screen;
+  for(int i = 0; i < PIX_COUNT; i++) {
+    board[i] = false;
+  }
   if(DEBUG_MODE) {
     std::cout << "Creating log file\n";
     log.open("log.txt",std::ios::trunc);
@@ -254,6 +257,19 @@ int Chip8::executeOp(uint16_t testOp) {
       }
       pc += 2;
       break;
+    case 0xE000:
+      if((opcode & 0x00FF) == 0x9E) {
+        //EX9E - Skip next if key in Vx is pressed
+        pc += keys[(V[x_code] & 0x000F)] ? 4 : 2;
+      } else if((opcode & 0x00FF) == 0xA1) {
+        //EXA1 - Skip next if key in Vx is NOT pressed
+        pc += keys[(V[x_code] & 0x000F)] ? 2 : 4;
+      } else {
+        std::cout << "Bad opcode.\n";
+        if(DEBUG_MODE)
+          debug("BAD OPCODE");
+      }
+      break;
   }
 
   if(DEBUG_MODE) {
@@ -262,16 +278,18 @@ int Chip8::executeOp(uint16_t testOp) {
   return chip_normal;
 };
 
-void Chip8::putFont(int index, bool* board, int pos) {
-    //this will be modified for sprites later
-    //note that this only puts 4 bits, since all fonts
-    //are 4 bits wide. Normal sprites will need 8
-    for(int j = 0; j < 5; j++) {
-      for(int k = 0; k < 4; k++) {
-        board[pos + j*64 + k] = (bool) (memory[index*5 + j] & (0x80 >> k));
-      }
-    }
+bool Chip8::getPixel(int pix) {
+  return board[pix];
 };
+
+void Chip8::setKeys(bool *newKeys) {
+  //this function is stupid
+  //the only reason it exists is to follow "encapsulation"
+  //and good OOP standards.
+  for(int i = 0; i < 16; i++)
+    keys[i] = newKeys[i];
+  return;
+}
 
 void Chip8::debug(std::string dbString) {
   log << dbString;

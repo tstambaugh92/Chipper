@@ -37,7 +37,7 @@ int main(int argc, char **args) {
     return -1;
   }
 
-  Chip8 cpu(screen);
+  Chip8 cpu;
   if(cpu.loadROM(args[1])) {
     std::cout << "Error opening ROM\n";
     return -1;
@@ -55,29 +55,67 @@ int main(int argc, char **args) {
   pixel->w = WIN_SCALE;
   pixel->h = WIN_SCALE;
 
+
   //main loop
   while(!quit) {
-    int t = 0;
+    //clear screen
     SDL_SetRenderDrawColor(gameRenderer,0,0,0,255); //black
     SDL_RenderClear(gameRenderer);
+
+    //input handling
     while(SDL_PollEvent(&event) != 0) {
-      if(event.type == SDL_QUIT)
-        quit = true;
+      switch(event.type) {
+        case SDL_QUIT:
+          quit = true;
+          break;
+        case SDL_KEYDOWN:
+        case SDL_KEYUP: {
+          const uint8_t *keyState = SDL_GetKeyboardState(NULL);
+          bool keys[16];
+          //this is a default mapping. May want to change
+          keys[0] = keyState[SDL_SCANCODE_X];
+          keys[1] = keyState[SDL_SCANCODE_1];
+          keys[2] = keyState[SDL_SCANCODE_2];
+          keys[3] = keyState[SDL_SCANCODE_3];
+          keys[4] = keyState[SDL_SCANCODE_Q];
+          keys[5] = keyState[SDL_SCANCODE_W];
+          keys[6] = keyState[SDL_SCANCODE_E];
+          keys[7] = keyState[SDL_SCANCODE_A];
+          keys[8] = keyState[SDL_SCANCODE_S];
+          keys[9] = keyState[SDL_SCANCODE_D];
+          keys[10] = keyState[SDL_SCANCODE_Z];
+          keys[11] = keyState[SDL_SCANCODE_C];
+          keys[12] = keyState[SDL_SCANCODE_4];
+          keys[13] = keyState[SDL_SCANCODE_R];
+          keys[14] = keyState[SDL_SCANCODE_F];
+          keys[15] = keyState[SDL_SCANCODE_V];
+          break;
+        }
+        default:
+          break;
+      }
     }
+
+    //execute next instruction
     if(cpu.executeOp(0) == chip_exit)
       quit = true;
+
+    //draw active pixels
     SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
-    for(t = 0; t < PIX_COUNT; t++) {
-      if (screen[t]) {
-        pixel->x = (t % PIX_WIDTH) * WIN_SCALE;
-        pixel->y = (t / PIX_WIDTH) * WIN_SCALE;
+    for(int i = 0; i < PIX_COUNT; i++) {
+      if (cpu.getPixel(i)) {
+        pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
+        pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
         SDL_RenderFillRect(gameRenderer,pixel);
       }
     }
 
+    //display screen, wait
     SDL_RenderPresent(gameRenderer);
     SDL_Delay(200);
   }
+
+  //dump CPU and cleanup
   if(DEBUG_MODE)
     cpu.dumpCpu();
   free(pixel);

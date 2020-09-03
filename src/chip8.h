@@ -14,10 +14,11 @@ enum returnCodes {
 class Chip8 {
   public:
     ~Chip8();
-    Chip8(bool* screen);
+    Chip8();
     int loadROM(char* filename);
-    void putFont(int index, bool* board, int pos);
     int executeOp(uint16_t testOp);
+    bool getPixel(int);
+    void setKeys(bool *);
     void debug(std::string);
     void dumpCpu();
   private:
@@ -30,7 +31,8 @@ class Chip8 {
     uint16_t pc; //program counter
     uint16_t stack[16]; //stack
     uint16_t opcode;
-    bool* board;
+    bool keys[16];
+    bool board[PIX_COUNT];
     int opCount;
     std::ofstream log;
 };
