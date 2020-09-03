@@ -104,7 +104,11 @@ int Chip8::executeOp(uint16_t testOp) {
     debug("opcode - " + ss.str() + " ");
   }
 
-  int temp, temp2;
+  int x_code, y_code;
+  x_code = opcode & 0x0F00;
+  y_code = opcode & 0x00F0;
+  x_code>>=8;
+  y_code>>=4;
   switch(opcode & 0xF000) {
     case 0x0000:
       if(opcode == 0x00E0) {
@@ -140,68 +144,72 @@ int Chip8::executeOp(uint16_t testOp) {
       break;
     case 0x3000:
       //3XNN - skip next if VX == NN
-      temp = opcode & 0x0F00;
-      temp >>= 8;
-      pc = V[temp] == (opcode & 0x00FF) ? pc+4 : pc+2;
+      pc = V[x_code] == (opcode & 0x00FF) ? pc+4 : pc+2;
       break;
     case 0x4000:
       //4XNN - skip next if VX != NN
-      temp = opcode & 0x0F00;
-      temp >>= 8;
-      pc = V[temp] != (opcode & 0x00FF) ? pc+4 : pc+2;
+      pc = V[x_code] != (opcode & 0x00FF) ? pc+4 : pc+2;
       break;
     case 0x5000:
       //5XY0 - skip next if VX == VY
-      temp = opcode & 0x0F00;
-      temp2 = opcode & 0x00F0;
-      temp >>= 8;
-      temp2 >>= 4;
-      pc = V[temp] == V[temp2] ? pc+4 : pc+2;
+      pc = V[x_code] == V[y_code] ? pc+4 : pc+2;
       break;
     case 0x6000:
       //6XNN - set VX to NN
-      temp = opcode & 0x0F00;
-      temp >>= 8;
-      V[temp] = opcode & 0x00FF;
+      V[x_code] = opcode & 0x00FF;
       pc+=2;
       break;
     case 0x7000:
       //7XNN - add NN to VX
-      temp = opcode & 0x0F00;
-      V[temp] = (int8_t)(V[temp] + opcode & 0x00FF);
+      V[x_code] = (int8_t)(V[x_code] + opcode & 0x00FF);
       pc+=2;
       break;
     case 0x8000:
-      temp = opcode & 0x0F00;
-      temp2 = opcode & 0x00F0;
-      temp>>=8;
-      temp2>>=4;
       switch (opcode & 0x000F) {
         case 0:
           //8XY0 - Set VX = VY
-          V[temp] = V[temp2];
+          V[x_code] = V[y_code];
           break;
         case 1:
           //8XY1 - Set VX = VX OR VY
-          V[temp] = V[temp] | V[temp2];
+          V[x_code] = V[x_code] | V[y_code];
           break;
         case 2:
           //8XY2 - Set VX = VX AND VY
-          V[temp] = V[temp] & V[temp2];
+          V[x_code] = V[x_code] & V[y_code];
           break;
         case 3:
           //8XY3 - Set VX = VX XOR VY
-          V[temp] = V[temp] ^ V[temp2];
+          V[x_code] = V[x_code] ^ V[y_code];
           break;
         case 4:
           //8XY4 - Set VX = VX + XY, set VF as cary
-          V[15] = V[temp] + V[temp2] > 0xFF ? 1 : 0;
-          V[temp]+=V[temp2];
+          V[15] = V[x_code] + V[y_code] > 0xFF ? 1 : 0;
+          V[x_code]+=V[y_code];
           break;
         case 5:
           //8XY5 - Set VX = VX - VY, set VF to 0 if borrow
-          V[15] = V[temp] > V[temp2] ? 1: 0;
-          V[temp] = (uint8_t)(V[temp] - V[temp2]);
+          V[15] = V[x_code] > V[y_code] ? 1: 0;
+          V[x_code] = (uint8_t)(V[x_code] - V[y_code]);
+          break;
+        case 6:
+          //8XY6 - Set VX = VY >> 1, store LSB of VY in VF
+          //this op code seems to be contested
+          //this was an undoc'd opcode in the original spec.
+          V[x_code] = V[y_code] >> 1;
+          V[15] = V[y_code] & 0x0001 == 1 ? 1 : 0;
+          break;
+        case 7:
+          //8XY7 - Set VX = VY - VX
+          V[15] = V[x_code] > V[y_code] ? 0 : 1;
+          V[x_code] = (uint8_t)(V[y_code] - V[x_code]);
+          break;
+        case 0xe:
+          //8XYE - Set VX = VY << 1, store MSB of VY in VF
+          //this is also a contested op code.
+          //this was an undoc'd opcode in the original spec
+          V[15] = V[y_code] & 0x8000 == 0x8000 ? 1 : 0;
+          V[x_code] = V[y_code] << 1;
           break;
       }
       pc+=2;
