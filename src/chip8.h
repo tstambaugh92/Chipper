@@ -2,9 +2,18 @@
 #define _CHIP_8_
 #include <cstdint>
 #include <fstream>
+#include <list>
 #define PIX_WIDTH 64
 #define PIX_HEIGHT 32
 #define PIX_COUNT 64*32
+
+struct spriteColor {
+  char location[2];
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint16_t add;
+};
 
 enum returnCodes {
   chip_normal,
@@ -36,6 +45,11 @@ class Chip8 {
     bool keys[16];
     int board[PIX_COUNT];
     int opCount;
+    bool customControls;
+    bool customColors;
+    std::list<spriteColor> colorsList;
+    std::list<spriteColor>::iterator it;
+
     std::ofstream log;
 };
 

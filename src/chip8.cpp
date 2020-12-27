@@ -21,6 +21,8 @@ Chip8::Chip8() {
   pc = 0;
   opcode = 0;
   opCount = 0;
+  customControls = false;
+  customColors = true;
   for(int i = 0; i < PIX_COUNT; i++) {
     board[i] = 0;
   }
@@ -64,8 +66,10 @@ Chip8::~Chip8() {
 
 int Chip8::loadROM(char* filename) {
   std::ifstream gameROM;
+  std::ifstream colorFile;
+  std::string _filename(filename);
+
   if(DEBUG_MODE) {
-    std::string _filename(filename);
     _filename = "Opening ROM " + _filename + "\n";
     debug(_filename);
   }
@@ -82,6 +86,50 @@ int Chip8::loadROM(char* filename) {
     gameROM.close();
     return -1;
   }
+
+  int nameIndex = 0;
+  for(int i = _filename.size() - 1; _filename[i] != '\\'; --i ) {
+    nameIndex = i;
+  }
+
+  //searh for a .clr file with same name
+  std::string _colorfilename = "..\\colors\\" + _filename.substr(nameIndex);
+  _colorfilename[_colorfilename.size() - 3] = 'l';
+  _colorfilename[_colorfilename.size() - 2] = 'r';
+  _colorfilename[_colorfilename.size() - 1] = 0;
+  if(DEBUG_MODE)
+    debug("Trying color file " + _colorfilename);
+  std::cout << _colorfilename.c_str() << std::endl;
+  colorFile.open(_colorfilename.c_str(),std::ios::in | std::ios::binary | std::ios::ate);
+  if(colorFile.good()) {
+    if(DEBUG_MODE)
+      debug("Custom colors found.\n");
+    customColors = true;
+
+  } else {
+    if(DEBUG_MODE)
+      debug("No custom colors\n");
+  }
+
+  //read and save colors from clr file
+  spriteColor tempColor;
+  tempColor.location[0] = 0;
+  tempColor.location[1] = 0;
+  tempColor.r = 0;
+  tempColor.g = 0;
+  tempColor.b = 0;
+  int numOfColors = ((int)colorFile.tellg()) / 5;
+  std::cout << numOfColors << " colors\n";
+  colorFile.seekg(0);
+  for(int i = numOfColors; i>0; --i) {
+    colorFile.read((char *)&tempColor,5);
+    tempColor.add = (*((uint8_t *)(tempColor.location)) << 8) + *((uint8_t *)(&(tempColor.location[1])));
+    std::cout << std::hex << (int)tempColor.add << std::dec << " dgfd\n";
+    colorsList.push_back(tempColor);
+  }
+  colorFile.close();
+  it = colorsList.begin();
+
   gameROM.seekg(0);
   gameROM.read((char *)&(memory[0x200]),fileSize);
   gameROM.close();
@@ -254,17 +302,14 @@ int Chip8::executeOp() {
       break;
     case 0xd000: {
       //DXYN - Draw N byte sprite in I at (VX,VY). If any pixels turned off, set VF = 1
-      int draw_color = 1;
-      switch(mem_reg) {
-        case 0x3c1:
-          draw_color = 2;
-          break;
-        case 0x3c7:
-          draw_color = 3;
-          break;
-        default:
-          break;
+      int draw_color = 0x00FF00;
+      it = colorsList.begin();
+      for (int i = 0; i < colorsList.size(); i++) {
+        if (it->add == mem_reg)
+          draw_color = (it->r << 16) | (it->g << 8) | (it->b);
+        it++;
       }
+
       if(mem_reg + (opcode & 0x000F) >= 4096) {
         std::cout << "Attempt to access out of bounds memory.";
         if(DEBUG_MODE)
@@ -461,6 +506,16 @@ void Chip8::dumpCpu() {
   ss.str("");
   ss << "Sound Timer: 0x" << std::hex << (int)sound << std::dec << "\n";
   debug(ss.str());
+  ss.str("");
+  debug("\n\nSprite Dump\n");
+  it = colorsList.begin();
+  for(int i = 0; i<colorsList.size(); i++) {
+    ss.str("");
+    ss << "Sprit Add: " << std::hex << (int)it->add << "\nR:" << (int) it->r << "\nG:" << it->g << "\nB:" << (int) it->b << std::dec << "\n\n";
+    it++;
+    debug(ss.str());
+  }
+
   debug("\n\nFinal RAM dump\n");
   for(int i = 0; i < 4096; i+=8) {
     ss.str("");

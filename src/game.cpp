@@ -142,22 +142,10 @@ int main(int argc, char **args) {
 
     //draw active pixels
     int cur_pix;
-    SDL_SetRenderDrawColor(gameRenderer,0,255,0,255); // green
     for(int i = 0; i < PIX_COUNT; i++) {
       cur_pix = cpu.getPixel(i);
       if(cur_pix) {
-        switch(cur_pix) {
-          case 3:
-            SDL_SetRenderDrawColor(gameRenderer,0,0,255,255);
-            break;
-          case 2:
-            SDL_SetRenderDrawColor(gameRenderer,255,0,0,255);
-            break;
-          default:
-          case 1:
-            SDL_SetRenderDrawColor(gameRenderer,0,255,0,255);
-            break;
-        }
+        SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,255);
         pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
         pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
         SDL_RenderFillRect(gameRenderer,pixel);
