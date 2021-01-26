@@ -1,12 +1,41 @@
 Chip8: Yet another Newbie Developed Interpreter
 Thomas Stambaugh
 
-An attempt at a Chip8 Interpreter using SDL2 in C++.
-C++ is used instead of C because at some point I'm going to use the
-windows API for file selection.
+Updated 1/26/21:
+This is a Chip8 Emulator with some additional features.
 
-Makefile included is for Windows using MinGW 64 bit tools. Code
-itself should compile fine using 32bit MinGW and SDL. At the moment,
-code should run in Linux as well. No WinAPI code right now. Will
-figure out how to do different make files for different OS's at a 
-later time. Don't have much experience with Make.
+Support for adding color to these traditionally single color
+games is included. Placing ".clr" files, simple hex files,
+in the colors folders allows this. 
+
+A clr file is simply a hex file written in 5 byte chunks.
+The first two bytes of a chunk represents a chip 8 address.
+If you know where the sprite is located in memory(see find
+feature), use this. The next three bytes are RGB values.
+
+The first two chunks in a clr file are for the background
+color and the default draw color respectively.
+
+When executing the program, the first argument should be
+a path to the desired ROM.(GUI file selection a possiblity
+in the future.) Additional arguments may be added after.
+
+Arguments:
+"debug" - Prints messages to the log.txt file, including a
+full CPU/RAM dump at the end of the file. The log.txt file
+contains every OP code executed like a stack trace.
+
+"find" - Everytime the game draws a sprite, it prints the
+address to the console. This helps make clr files for the
+custom color feature.
+
+License Notes: This project is mostly for my own educational
+benefit. SDL2 uses the lgpl license, but any of my own code
+is free to use as you see fit for non-commercial use. Credits
+not required but shoutouts are cool.
+
+Warranty: This software is as-is. No warranty, express or
+implied, is offered. 
+
+At the moment, binaries are not evan available, so really,
+no warranty at all for code you compile yourself.
