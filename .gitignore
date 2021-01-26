@@ -1,3 +1,4 @@
 bin/SDL2.dll
 bin/test.exe
 roms/
+bin/log.txt

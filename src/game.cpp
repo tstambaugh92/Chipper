@@ -73,15 +73,15 @@ int main(int argc, char **args) {
   double sixtyHertz = 1000.0 / 60.0; //miliseonds
   int startCycleTicks = 0;
   int cycleDelta = 0;
+  bool drawFrane = true;
 
   //main loop
   while(!quit) {
     //timing of cycle
     startCycleTicks = SDL_GetTicks();
 
-    //clear screen
-    SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
-    SDL_RenderClear(gameRenderer);
+    //draw a frame unless told otherwise
+    drawFrane = true;
 
     //input handling
     while(SDL_PollEvent(&event) != 0) {
@@ -140,6 +140,9 @@ int main(int argc, char **args) {
       case chip_exit:
         quit = true;
         break;
+      case chip_skipDraw:
+        drawFrane = false;
+        break;
       case chip_normal:
       default:
         break;
@@ -152,15 +155,21 @@ int main(int argc, char **args) {
       delayTicks = delayDeltaTicks;
     }
 
-    //draw active pixels
-    int cur_pix;
-    for(int i = 0; i < PIX_COUNT; i++) {
-      cur_pix = cpu.getPixel(i);
-      if(cur_pix) {
-        SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,255);
-        pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
-        pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
-        SDL_RenderFillRect(gameRenderer,pixel);
+    if(drawFrane) {
+      //clear screen
+      SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
+      SDL_RenderClear(gameRenderer);
+
+      //draw active pixels
+      int cur_pix;
+      for(int i = 0; i < PIX_COUNT; i++) {
+        cur_pix = cpu.getPixel(i);
+        if(cur_pix) {
+          SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,255);
+          pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
+          pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
+          SDL_RenderFillRect(gameRenderer,pixel);
+        }
       }
     }
 

@@ -167,6 +167,7 @@ int Chip8::loadROM(char* filename) {
 };
 
 int Chip8::executeOp() {
+  bool drawFrame = false;
   opCount++;
   if(pc >= 4096) {
     std::cout << "PC is out of bounds\n";
@@ -364,6 +365,7 @@ int Chip8::executeOp() {
           } else {
             if(memory[mem_reg+i] & (0x80 >> j)) {
               board[cur_pixel] = draw_color;
+              drawFrame = true;
             }
           }
         }
@@ -487,7 +489,11 @@ int Chip8::executeOp() {
   if(DEBUG_MODE) {
     debug("--\n");
   }
-  return chip_normal;
+  if(drawFrame) {
+    return chip_normal;
+  } else {
+    return chip_skipDraw;
+  }
 };
 
 void Chip8::timerTick() {

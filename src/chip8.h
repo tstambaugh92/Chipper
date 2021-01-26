@@ -18,7 +18,8 @@ struct spriteColor {
 enum returnCodes {
   chip_normal,
   chip_exit,
-  chip_oob
+  chip_oob,
+  chip_skipDraw
 };
 
 class Chip8 {
