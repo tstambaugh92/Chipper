@@ -8,6 +8,7 @@
 #include "chip8.h"
 
 bool DEBUG_MODE = false;
+bool FIND_MODE = false;
 
 void printBoard(int *board); // prints an ASCII board to console for debugging
 
@@ -19,10 +20,12 @@ int main(int argc, char **args) {
   }
 
   //debug mode
-  if(argc >2) {
-    if(strcmp(args[2],"debug") == 0) {
-      DEBUG_MODE = true;
-      std::cout << "Debug mode on\n";
+  if(argc > 2) {
+    for(int i = 2; i < argc; i++) {
+      if (strcmp(args[i],"debug") == 0)
+        DEBUG_MODE = true;
+      if(strcmp(args[i],"find") == 0)
+        FIND_MODE = true;
     }
   }
 
@@ -43,10 +46,19 @@ int main(int argc, char **args) {
     return -1;
   }
 
+  int backgroundRGB[3];
+  if(cpu.areCustomColors()) {
+    cpu.getBackgroundRGB(backgroundRGB);
+  } else {
+    backgroundRGB[0] = 0;
+    backgroundRGB[1] = 0;
+    backgroundRGB[2] = 0;
+  }
+
   //set up game window and pixel
   SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8 | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
   SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
-  SDL_SetRenderDrawColor(gameRenderer,0,0,0,255);
+  SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
   SDL_Event event;
   bool quit = false;
   SDL_Rect *pixel = new SDL_Rect;
@@ -68,7 +80,7 @@ int main(int argc, char **args) {
     startCycleTicks = SDL_GetTicks();
 
     //clear screen
-    SDL_SetRenderDrawColor(gameRenderer,0,0,0,255); //black
+    SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
     SDL_RenderClear(gameRenderer);
 
     //input handling

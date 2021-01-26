@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 extern bool DEBUG_MODE;
+extern bool FIND_MODE;
 
 Chip8::Chip8() {
   //clear everything to 0
@@ -70,8 +71,7 @@ int Chip8::loadROM(char* filename) {
   std::string _filename(filename);
 
   if(DEBUG_MODE) {
-    _filename = "Opening ROM " + _filename + "\n";
-    debug(_filename);
+    debug("Opening ROM " + _filename + "\n");
   }
 
   //ROM opens at end of file to get filesize. Returns to start of file
@@ -94,12 +94,11 @@ int Chip8::loadROM(char* filename) {
 
   //searh for a .clr file with same name
   std::string _colorfilename = "..\\colors\\" + _filename.substr(nameIndex);
-  _colorfilename[_colorfilename.size() - 3] = 'l';
-  _colorfilename[_colorfilename.size() - 2] = 'r';
-  _colorfilename[_colorfilename.size() - 1] = 0;
+  _colorfilename[_colorfilename.size() - 2] = 'l';
+  _colorfilename[_colorfilename.size() - 1] = 'r';
+  _colorfilename[_colorfilename.size()] = 0;
   if(DEBUG_MODE)
     debug("Trying color file " + _colorfilename);
-  std::cout << _colorfilename.c_str() << std::endl;
   colorFile.open(_colorfilename.c_str(),std::ios::in | std::ios::binary | std::ios::ate);
   if(colorFile.good()) {
     if(DEBUG_MODE)
@@ -119,13 +118,39 @@ int Chip8::loadROM(char* filename) {
   tempColor.g = 0;
   tempColor.b = 0;
   int numOfColors = ((int)colorFile.tellg()) / 5;
-  std::cout << numOfColors << " colors\n";
-  colorFile.seekg(0);
-  for(int i = numOfColors; i>0; --i) {
-    colorFile.read((char *)&tempColor,5);
-    tempColor.add = (*((uint8_t *)(tempColor.location)) << 8) + *((uint8_t *)(&(tempColor.location[1])));
-    std::cout << std::hex << (int)tempColor.add << std::dec << " dgfd\n";
-    colorsList.push_back(tempColor);
+  if(numOfColors < 2) {
+    //first two colors should be a custom background and then default color
+    customColors = false;
+    debug("Need at least two colors in clr file.\n");
+    debug("Custom Color mode aborted.\n");
+  } else {
+    debug(std::to_string(numOfColors) + " colors\n");
+    colorFile.seekg(0);
+    for(int i = 0; i < numOfColors; i++) {
+      colorFile.read((char *)&tempColor,5);
+      tempColor.add = (*((uint8_t *)(tempColor.location)) << 8) + *((uint8_t *)(&(tempColor.location[1])));
+      if(DEBUG_MODE) {
+        debug("Color for ");
+        log << std::hex;
+        if(i==0) {
+          debug("background ");
+        } else if (i==1) {
+          debug("default color ");
+        } else {
+          debug("0x");
+          debug(tempColor.add);
+        }
+        debug(" R:0x");
+        debug(tempColor.r);
+        debug(" G:0x");
+        debug(tempColor.g);
+        debug(" B:0x");
+        debug(tempColor.b);
+        log << std::dec;
+        debug("\n");
+      }
+      colorsList.push_back(tempColor);
+    }
   }
   colorFile.close();
   it = colorsList.begin();
@@ -302,12 +327,19 @@ int Chip8::executeOp() {
       break;
     case 0xd000: {
       //DXYN - Draw N byte sprite in I at (VX,VY). If any pixels turned off, set VF = 1
-      int draw_color = 0x00FF00;
-      it = colorsList.begin();
-      for (int i = 0; i < colorsList.size(); i++) {
-        if (it->add == mem_reg)
-          draw_color = (it->r << 16) | (it->g << 8) | (it->b);
+      int draw_color = 0x0000FF00;
+      if(customColors) {
+        it = colorsList.begin();
         it++;
+        draw_color = (it->r << 16) | (it->g << 8) | (it->b); //2nd color default
+        it++;
+        for (int i = 2; i < colorsList.size(); i++) {
+          if (it->add == mem_reg) {
+            draw_color = (it->r << 16) | (it->g << 8) | (it->b);
+            break;
+          }
+          it++;
+        }
       }
 
       if(mem_reg + (opcode & 0x000F) >= 4096) {
@@ -317,7 +349,8 @@ int Chip8::executeOp() {
         return chip_oob;
       } 
       V[15] = 0;
-      std::cout << "Sprite at I 0x" << std::hex << mem_reg << " " << opcode << std::dec << "\n";
+      if(FIND_MODE) //print the address of a sprite. useful for custom colors
+        std::cout << "Sprite at I 0x" << std::hex << mem_reg << " " << opcode << std::dec << "\n";
       for(int i = 0; i < (opcode & 0x000F); i++) {
         for(int j = 0; j < 8; j++) {
           int cur_pixel = ((V[y_code] + i) % PIX_HEIGHT) * PIX_WIDTH + (V[x_code] + j) % PIX_WIDTH;
@@ -478,11 +511,6 @@ void Chip8::setKeys(bool *newKeys) {
   return;
 }
 
-void Chip8::debug(std::string dbString) {
-  log << dbString;
-  return;
-};
-
 void Chip8::dumpCpu() {
   std::stringstream ss;
   debug("\n\nFinal CPU dump:\n");
@@ -525,5 +553,28 @@ void Chip8::dumpCpu() {
     ss << "\n";
     debug(ss.str());
   }
+  return;
+};
+
+bool Chip8::areCustomColors() {
+  return customColors;
+};
+
+void Chip8::getBackgroundRGB(int rgb[3]) {
+  //the first custom color is always the background
+  it = colorsList.begin();
+  rgb[0] = it->r;
+  rgb[1] = it->g;
+  rgb[2] = it->b;
+  return;
+};
+
+void Chip8::debug(std::string dbString) {
+  log << dbString;
+  return;
+};
+
+void Chip8::debug(int str) {
+  log << str;
   return;
 };

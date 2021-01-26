@@ -30,8 +30,11 @@ class Chip8 {
     void timerTick();
     int getPixel(int);
     void setKeys(bool *);
-    void debug(std::string);
     void dumpCpu();
+    bool areCustomColors();
+    void getBackgroundRGB(int rgb[3]);
+    void debug(std::string);
+    void debug(int);
   private:
     uint8_t memory[4096]; //4kb of memory
     uint8_t V[16]; //16 8 bit registers
