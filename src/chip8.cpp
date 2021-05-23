@@ -2,15 +2,16 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 extern bool DEBUG_MODE;
 extern bool FIND_MODE;
 
 Chip8::Chip8() {
   //clear everything to 0
-  for(int i = 0; i < 4096; i++)
-    memory[i] = 0;
+  memset(memory,0,4096);
   for(int i = 0; i < 16; i++) {
+    //memset *may* be better here
     V[i] = 0;
     stack[i] = 0;
     keys[i] = false;
@@ -24,9 +25,7 @@ Chip8::Chip8() {
   opCount = 0;
   customControls = false;
   customColors = true;
-  for(int i = 0; i < PIX_COUNT; i++) {
-    board[i] = 0;
-  }
+  memset(board,0,PIX_COUNT*sizeof(int));
   if(DEBUG_MODE) {
     std::cout << "Creating log file\n";
     log.open("log.txt",std::ios::trunc);
@@ -37,7 +36,7 @@ Chip8::Chip8() {
   }
 
   //font data
-  int font[] = {
+  uint8_t font[] = {
     0xf0,0x90,0x90,0x90,0xf0, //0
     0x20,0x60,0x20,0x20,0x70, //1
     0xf0,0x10,0xf0,0x80,0xf0, //2
@@ -55,8 +54,8 @@ Chip8::Chip8() {
     0xf0,0x80,0xf0,0x80,0xf0, //E
     0xf0,0x80,0xf0,0x80,0x80 //F
     };
-  for(int i = 0; i < 80; i++)
-    memory[i] = (uint8_t)font[i];
+  //load font in memory
+  memcpy(memory,font,80);
 };
 
 Chip8::~Chip8() {

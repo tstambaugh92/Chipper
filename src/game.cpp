@@ -56,7 +56,7 @@ int main(int argc, char **args) {
   }
 
   //set up game window and pixel
-  SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8 | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
+  SDL_Window* window = SDL_CreateWindow( "Chipper | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
   SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
   SDL_SetRenderDrawBlendMode(gameRenderer,SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
@@ -116,14 +116,14 @@ int main(int argc, char **args) {
             opsPerSec+=100;
             msecPerOp = 1000.0 / opsPerSec;
             char title[256];
-            sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
+            sprintf(title,"Chipper | OPS %d",opsPerSec);
             SDL_SetWindowTitle(window,title);
           }
           if(keyState[SDL_SCANCODE_LEFT]) {
             opsPerSec-=100;
             msecPerOp = 1000.0 / opsPerSec;
             char title[256];
-            sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
+            sprintf(title,"Chipper | OPS %d",opsPerSec);
             SDL_SetWindowTitle(window,title);
           }
           break;
