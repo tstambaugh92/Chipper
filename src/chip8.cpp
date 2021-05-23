@@ -103,7 +103,6 @@ int Chip8::loadROM(char* filename) {
     if(DEBUG_MODE)
       debug("Custom colors found.\n");
     customColors = true;
-
   } else {
     if(DEBUG_MODE)
       debug("No custom colors\n");
@@ -174,10 +173,12 @@ int Chip8::executeOp() {
       debug("PC is OOB. See CPU dump.\n");
     return chip_oob;
   }
+
+  //loading each byte manually rather than 2 bytes
+  //prevents endian errors. Chip8 is big endian
   opcode = memory[pc];
   opcode <<=8;
   opcode += memory[pc+1];
-
 
   if(DEBUG_MODE) {
     std::stringstream ss;
