@@ -58,6 +58,7 @@ int main(int argc, char **args) {
   //set up game window and pixel
   SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8 | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
   SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+  SDL_SetRenderDrawBlendMode(gameRenderer,SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
   SDL_Event event;
   bool quit = false;
@@ -165,7 +166,7 @@ int main(int argc, char **args) {
       for(int i = 0; i < PIX_COUNT; i++) {
         cur_pix = cpu.getPixel(i);
         if(cur_pix) {
-          SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,255);
+          SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,80);
           pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
           pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
           SDL_RenderFillRect(gameRenderer,pixel);
