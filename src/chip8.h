@@ -7,6 +7,8 @@
 #define PIX_HEIGHT 32
 #define PIX_COUNT 64*32
 
+namespace Chipper {
+
 struct spriteColor {
   char location[2];
   uint8_t r;
@@ -56,5 +58,7 @@ class Chip8 {
 
     std::ofstream log;
 };
+
+} //end namespace
 
 #endif

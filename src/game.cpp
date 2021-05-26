@@ -24,8 +24,10 @@ int main(int argc, char **args) {
     for(int i = 2; i < argc; i++) {
       if (strcmp(args[i],"debug") == 0)
         DEBUG_MODE = true;
-      if(strcmp(args[i],"find") == 0)
+      else if(strcmp(args[i],"find") == 0)
         FIND_MODE = true;
+      else
+        std::cout << "Bad Argument: " << args[i] << "\n";
     }
   }
 
@@ -40,7 +42,7 @@ int main(int argc, char **args) {
     return -1;
   }
 
-  Chip8 cpu;
+  Chipper::Chip8 cpu;
   if(cpu.loadROM(args[1])) {
     std::cout << "Error opening ROM\n";
     return -1;
@@ -62,11 +64,11 @@ int main(int argc, char **args) {
   SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
   SDL_Event event;
   bool quit = false;
-  SDL_Rect *pixel = new SDL_Rect;
-  pixel->x = 0;
-  pixel->y = 0;
-  pixel->w = WIN_SCALE;
-  pixel->h = WIN_SCALE;
+  SDL_Rect pixel = SDL_Rect();
+  pixel.x = 0;
+  pixel.y = 0;
+  pixel.w = WIN_SCALE;
+  pixel.h = WIN_SCALE;
   int opsPerSec = 800;
   double msecPerOp = 1000.0 / 800;
   int delayTicks = 0;
@@ -135,16 +137,16 @@ int main(int argc, char **args) {
 
     //execute next instruction
     switch(cpu.executeOp()) {
-      case chip_oob:
+      case Chipper::chip_oob:
         if(DEBUG_MODE)
           cpu.debug("Stopped execution due to bad address. Check I\n");
-      case chip_exit:
+      case Chipper::chip_exit:
         quit = true;
         break;
-      case chip_skipDraw:
+      case Chipper::chip_skipDraw:
         drawFrane = false;
         break;
-      case chip_normal:
+      case Chipper::chip_normal:
       default:
         break;
     }
@@ -166,10 +168,10 @@ int main(int argc, char **args) {
       for(int i = 0; i < PIX_COUNT; i++) {
         cur_pix = cpu.getPixel(i);
         if(cur_pix) {
-          SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,80);
-          pixel->x = (i % PIX_WIDTH) * WIN_SCALE;
-          pixel->y = (i / PIX_WIDTH) * WIN_SCALE;
-          SDL_RenderFillRect(gameRenderer,pixel);
+          SDL_SetRenderDrawColor(gameRenderer,(cur_pix >> 16) & 0xFF, (cur_pix >> 8) & 0xFF, cur_pix & 0xFF,255);
+          pixel.x = (i % PIX_WIDTH) * WIN_SCALE;
+          pixel.y = (i / PIX_WIDTH) * WIN_SCALE;
+          SDL_RenderFillRect(gameRenderer,&pixel);
         }
       }
     }
@@ -184,7 +186,6 @@ int main(int argc, char **args) {
   //dump CPU and cleanup
   if(DEBUG_MODE)
     cpu.dumpCpu();
-  free(pixel);
   SDL_DestroyRenderer(gameRenderer);
   SDL_DestroyWindow(window);
   SDL_Quit();

@@ -6,6 +6,7 @@
 #include <string>
 extern bool DEBUG_MODE;
 extern bool FIND_MODE;
+using namespace Chipper;
 
 Chip8::Chip8() {
   //clear everything to 0
@@ -177,7 +178,7 @@ int Chip8::executeOp() {
   //loading each byte manually rather than 2 bytes
   //prevents endian errors. Chip8 is big endian
   opcode = memory[pc];
-  opcode <<=8;
+  opcode <<= 8;
   opcode += memory[pc+1];
 
   if(DEBUG_MODE) {
@@ -202,7 +203,7 @@ int Chip8::executeOp() {
       if(opcode == 0x00E0) {
         //0x00E0 - clear screen
         for(int i = 0; i < PIX_COUNT; i++)
-          board[i] = false;
+          board[i] = 0;
         pc+=2;
       } else if(opcode == 0x00EE) {
         //0x00EE - return from sub
@@ -413,11 +414,15 @@ int Chip8::executeOp() {
           break;
         case 0x15:
           //FX15 - Set delay timer = VX
+          if(DEBUG_MODE)
+            debug("-- delay set to " + std::to_string(delay));
           delay = V[x_code];
           pc+=2;
           break;
         case 0x18:
           //FX18 - Set sound timer = VX
+          if(DEBUG_MODE)
+            debug("-- sound set to " + std::to_string(sound));
           sound = V[x_code];
           pc+=2;
           break;
