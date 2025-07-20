@@ -39,19 +39,10 @@ clean:
 # Rebuild everything
 rebuild: clean all
 
-# Install SDL2 dependencies (Arch Linux)
-# Note: You can also just run: sudo pacman -S sdl2
-install-deps:
-	sudo pacman -S sdl2
-
 # Check if SDL2 is installed
 check-deps:
 	@echo "Checking for SDL2..."
 	@pkg-config --exists sdl2 && echo "SDL2 found" || echo "SDL2 not found - run 'sudo pacman -S sdl2'"
-
-# Run the program
-run: $(TARGET)
-	./$(TARGET)
 
 # Phony targets
 .PHONY: all clean rebuild install-deps check-deps run
