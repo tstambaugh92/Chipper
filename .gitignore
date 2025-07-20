@@ -1,3 +1,3 @@
-bin/SDL2.dll
-bin/test.exe
+bin/*
+obj/*
 roms/

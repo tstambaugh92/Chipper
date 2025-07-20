@@ -1,3 +1,4 @@
+# Make file is AI generated code asked to turn my windows makefile into a proper one for linux.
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -O2

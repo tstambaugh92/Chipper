@@ -13,7 +13,7 @@ bool FIND_MODE = false;
 void printBoard(int *board); // prints an ASCII board to console for debugging
 
 int main(int argc, char **args) {
-  printf("Are we booting?\n");
+  std::cout << "Are we booting?\n";
 
   std::srand(std::time(NULL));
   if(argc == 1) {
@@ -134,16 +134,14 @@ int main(int argc, char **args) {
           if(keyState[SDL_SCANCODE_RIGHT]) {
             opsPerSec+=100;
             msecPerOp = 1000.0 / opsPerSec;
-            char title[256];
-            sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
-            SDL_SetWindowTitle(window,title);
+            std::string title = "Chipper - Chip8 | OPS " + std::to_string(opsPerSec);
+            SDL_SetWindowTitle(window, title.c_str());
           }
           if(keyState[SDL_SCANCODE_LEFT]) {
             opsPerSec-=100;
             msecPerOp = 1000.0 / opsPerSec;
-            char title[256];
-            sprintf(title,"CYNDI - Chip8 | OPS %d",opsPerSec);
-            SDL_SetWindowTitle(window,title);
+            std::string title = "Chipper - Chip8 | OPS " + std::to_string(opsPerSec);
+            SDL_SetWindowTitle(window, title.c_str());
           }
           break;
         }
