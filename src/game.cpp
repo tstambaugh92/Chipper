@@ -13,6 +13,8 @@ bool FIND_MODE = false;
 void printBoard(int *board); // prints an ASCII board to console for debugging
 
 int main(int argc, char **args) {
+  printf("Are we booting?\n");
+
   std::srand(std::time(NULL));
   if(argc == 1) {
     std::cout << "Enter ROM title when executing\n";
@@ -23,7 +25,10 @@ int main(int argc, char **args) {
   if(argc > 2) {
     for(int i = 2; i < argc; i++) {
       if (strcmp(args[i],"debug") == 0)
+      {
         DEBUG_MODE = true;
+        std::cout << "Debug mode enabled\n";
+      }
       if(strcmp(args[i],"find") == 0)
         FIND_MODE = true;
     }
@@ -31,19 +36,26 @@ int main(int argc, char **args) {
 
   //Chip8 has a 64x32 pixel board. Scale pixel size by WIN_SCALE
   int WIN_SCALE = 8;
-  int screen[PIX_COUNT]; //1 pixel is 1 bit
-  for(int i = 0; i < PIX_COUNT; i++)
-    screen[i] = 0;
 
   if(SDL_Init(SDL_INIT_VIDEO)) {
-    printf("Error Initiliing SDL\n");
+    std::cout << "Error initializing SDL\n";
     return -1;
+  }
+  else if (DEBUG_MODE) {
+    std::cout << "SDL initialized successfully\n";
   }
 
   Chip8 cpu;
+  if(DEBUG_MODE) {
+    std::cout << "cpu initialized\n";
+    std::cout << "Loading ROM: " << args[1] << "\n";
+  }
   if(cpu.loadROM(args[1])) {
     std::cout << "Error opening ROM\n";
     return -1;
+  }
+  else if (DEBUG_MODE) {
+    std::cout << "ROM loaded successfully\n";
   }
 
   int backgroundRGB[3];
@@ -54,9 +66,12 @@ int main(int argc, char **args) {
     backgroundRGB[1] = 0;
     backgroundRGB[2] = 0;
   }
+  if(DEBUG_MODE) {
+    std::cout << "Background RGB: " << backgroundRGB[0] << ", " << backgroundRGB[1] << ", " << backgroundRGB[2] << "\n";
+  }
 
   //set up game window and pixel
-  SDL_Window* window = SDL_CreateWindow( "CYNDI - Chip8 | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
+  SDL_Window* window = SDL_CreateWindow( "Chipper - Chip8 | OPS: 800", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 64*WIN_SCALE, 32*WIN_SCALE, SDL_WINDOW_SHOWN );
   SDL_Renderer* gameRenderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
   SDL_SetRenderDrawColor(gameRenderer,backgroundRGB[0],backgroundRGB[1],backgroundRGB[2],255);
   SDL_Event event;
@@ -74,6 +89,11 @@ int main(int argc, char **args) {
   int startCycleTicks = 0;
   int cycleDelta = 0;
 
+  if(DEBUG_MODE) {
+    std::cout << "Game window and renderer created successfully\n";
+    std::cout << "Window title: Chipper - Chip8 | OPS: " << opsPerSec << "\n";
+    std::cout << "Entering main loop\n";
+  }
   //main loop
   while(!quit) {
     //timing of cycle
@@ -139,7 +159,6 @@ int main(int argc, char **args) {
           cpu.debug("Stopped execution due to bad address. Check I\n");
       case chip_exit:
         quit = true;
-        break;
       case chip_normal:
       default:
         break;
@@ -174,7 +193,7 @@ int main(int argc, char **args) {
   //dump CPU and cleanup
   if(DEBUG_MODE)
     cpu.dumpCpu();
-  free(pixel);
+  delete pixel;
   SDL_DestroyRenderer(gameRenderer);
   SDL_DestroyWindow(window);
   SDL_Quit();

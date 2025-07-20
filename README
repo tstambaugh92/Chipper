@@ -39,3 +39,7 @@ implied, is offered.
 
 At the moment, binaries are not evan available, so really,
 no warranty at all for code you compile yourself.
+
+2025 Patch Note: I am going to attempt to bring this back to life with SDL3 on linux.
+If I do something cool with it, I might port the new version back to windows, but this is gonna be
+a bit to figure out. It's been awhile.

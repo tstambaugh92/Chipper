@@ -1,11 +1,56 @@
-CXX=g++
-CXXFLAGS=-lmingw32 -lSDL2main -lSDL2
+# Compiler and flags
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -Wextra -O2
+LDFLAGS = -lSDL2
 
-LIB=-LC:/SDL2-2.0.5/x86_64-w64-mingw32/lib
-INC=-IC:/SDL2-2.0.5/x86_64-w64-mingw32/include
+# Directories
+SRCDIR = src
+BINDIR = bin
+OBJDIR = obj
 
-testmake: ./src/game.cpp
-	$(CXX) -o ./bin/test.exe ./src/*.cpp $(INC) $(LIB) $(CXXFLAGS)
+# Source files
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+TARGET = $(BINDIR)/chipper
 
+# Default target
+all: $(TARGET)
+
+# Create directories if they don't exist
+$(BINDIR):
+	mkdir -p $(BINDIR)
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+# Build target
+$(TARGET): $(OBJECTS) | $(BINDIR)
+	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
+
+# Compile object files
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean build artifacts
 clean:
-	rm ./bin/*.o ./bin/*.exe
+	rm -rf $(OBJDIR) $(BINDIR)
+
+# Rebuild everything
+rebuild: clean all
+
+# Install SDL2 dependencies (Arch Linux)
+# Note: You can also just run: sudo pacman -S sdl2
+install-deps:
+	sudo pacman -S sdl2
+
+# Check if SDL2 is installed
+check-deps:
+	@echo "Checking for SDL2..."
+	@pkg-config --exists sdl2 && echo "SDL2 found" || echo "SDL2 not found - run 'sudo pacman -S sdl2'"
+
+# Run the program
+run: $(TARGET)
+	./$(TARGET)
+
+# Phony targets
+.PHONY: all clean rebuild install-deps check-deps run

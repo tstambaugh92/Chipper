@@ -87,16 +87,20 @@ int Chip8::loadROM(char* filename) {
     return -1;
   }
 
-  int nameIndex = 0;
-  for(int i = _filename.size() - 1; _filename[i] != '\\'; --i ) {
-    nameIndex = i;
+  // Find the last path separator (works for both Windows and Linux)
+  size_t nameIndex = _filename.find_last_of("/\\");
+  if (nameIndex == std::string::npos) {
+    nameIndex = 0;  // No path separator found, use whole filename
+  } else {
+    nameIndex++;    // Skip the separator
   }
 
-  //searh for a .clr file with same name
-  std::string _colorfilename = "..\\colors\\" + _filename.substr(nameIndex);
-  _colorfilename[_colorfilename.size() - 2] = 'l';
-  _colorfilename[_colorfilename.size() - 1] = 'r';
-  _colorfilename[_colorfilename.size()] = 0;
+  // Search for a .clr file with same name (Linux path style)
+  std::string _colorfilename = "./colors/" + _filename.substr(nameIndex);
+  if (_colorfilename.size() >= 3) {
+    _colorfilename[_colorfilename.size() - 2] = 'l';
+    _colorfilename[_colorfilename.size() - 1] = 'r';
+  }
   if(DEBUG_MODE)
     debug("Trying color file " + _colorfilename);
   colorFile.open(_colorfilename.c_str(),std::ios::in | std::ios::binary | std::ios::ate);
